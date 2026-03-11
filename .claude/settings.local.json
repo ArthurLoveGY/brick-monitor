@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npm run:*)",
+      "Bash(npx:*)",
+      "Bash(cargo check:*)",
+      "Bash(\"C:/Users/HP/.cargo/bin/cargo.exe\" check:*)",
+      "Bash(\"C:/Users/HP/.cargo/bin/cargo.exe\" update:*)",
+      "Bash(cargo build:*)",
+      "Bash(netstat:*)",
+      "Bash(taskkill:*)",
+      "Bash(powershell:*)",
+      "Bash(cargo clippy:*)",
+      "Bash(tasklist:*)",
+      "Bash(sqlite3:*)",
+      "Bash(xargs -I {} taskkill /F /PID {})",
+      "Bash(wmic process:*)"
+    ]
+  }
+}
