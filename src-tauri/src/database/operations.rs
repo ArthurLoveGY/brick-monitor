@@ -3,6 +3,7 @@ use crate::keyboard::KeyEvent;
 use crate::window::AppCategory;
 use chrono::Local;
 use serde::{Serialize, Deserialize};
+use rusqlite::types::Type;
 
 pub struct Database {
     conn: Connection,
@@ -11,11 +12,17 @@ pub struct Database {
 impl Database {
     pub fn new() -> Result<Self, rusqlite::Error> {
         let db_path = dirs::data_dir()
-            .unwrap()
+            .ok_or_else(|| {
+                rusqlite::Error::InvalidPath("无法解析系统数据目录".into())
+            })?
             .join("keyboard-tracker")
             .join("data.db");
 
-        std::fs::create_dir_all(db_path.parent().unwrap()).ok();
+        let parent_dir = db_path.parent().ok_or_else(|| {
+            rusqlite::Error::InvalidPath("无法解析数据库父目录".into())
+        })?;
+        std::fs::create_dir_all(parent_dir)
+            .map_err(|_| rusqlite::Error::InvalidPath(parent_dir.to_path_buf()))?;
         let conn = Connection::open(db_path)?;
         conn.execute_batch(crate::database::schema::SCHEMA)?;
 
@@ -30,7 +37,7 @@ impl Database {
             conn.execute(
                 "ALTER TABLE salary_config ADD COLUMN lunch_break_minutes INTEGER DEFAULT 60",
                 [],
-            ).ok(); // Ignore error if column already exists
+            )?;
         }
 
         Ok(Self { conn })
@@ -93,9 +100,9 @@ impl Database {
         // 使用 'unixepoch', 'localtime' 将 UTC 时间戳转换为本地时间
         self.conn.query_row(
             "SELECT COUNT(*),
-                    SUM(CASE WHEN key_type = 'Char' THEN 1 ELSE 0 END),
-                    SUM(CASE WHEN app_category = 'IDE' THEN 1 ELSE 0 END),
-                    SUM(CASE WHEN app_category = 'Browser' THEN 1 ELSE 0 END)
+                    COALESCE(SUM(CASE WHEN key_type = 'Char' THEN 1 ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN app_category IN ('IDE', 'Terminal') THEN 1 ELSE 0 END), 0),
+                    COALESCE(SUM(CASE WHEN app_category = 'Browser' THEN 1 ELSE 0 END), 0)
              FROM keystrokes
              WHERE date(timestamp/1000, 'unixepoch', 'localtime') = ?1",
             params![today],
@@ -180,10 +187,10 @@ impl Database {
 
         self.conn.query_row(
             "SELECT
-                SUM(CASE WHEN app_category = 'IDE' THEN 1 ELSE 0 END),
-                SUM(CASE WHEN app_category = 'Terminal' THEN 1 ELSE 0 END),
-                SUM(CASE WHEN app_category = 'Chat' THEN 1 ELSE 0 END),
-                SUM(CASE WHEN app_category NOT IN ('IDE', 'Terminal', 'Chat') THEN 1 ELSE 0 END)
+                COALESCE(SUM(CASE WHEN app_category = 'IDE' THEN 1 ELSE 0 END), 0),
+                COALESCE(SUM(CASE WHEN app_category = 'Terminal' THEN 1 ELSE 0 END), 0),
+                COALESCE(SUM(CASE WHEN app_category = 'Chat' THEN 1 ELSE 0 END), 0),
+                COALESCE(SUM(CASE WHEN app_category NOT IN ('IDE', 'Terminal', 'Chat') THEN 1 ELSE 0 END), 0)
              FROM keystrokes
              WHERE date(timestamp/1000, 'unixepoch', 'localtime') = ?1",
             params![today],
@@ -309,8 +316,8 @@ impl Database {
                 let keywords_json: String = row.get(2)?;
                 Ok(PrivacySettings {
                     pause_during_sensitive: row.get(0)?,
-                    exclude_apps: serde_json::from_str(&exclude_apps_json).unwrap_or_default(),
-                    sensitive_window_keywords: serde_json::from_str(&keywords_json).unwrap_or_default(),
+                    exclude_apps: parse_string_array(&exclude_apps_json, 1)?,
+                    sensitive_window_keywords: parse_string_array(&keywords_json, 2)?,
                 })
             },
         )
@@ -333,4 +340,10 @@ impl Database {
         )?;
         Ok(())
     }
+}
+
+fn parse_string_array(value: &str, column_index: usize) -> Result<Vec<String>, rusqlite::Error> {
+    serde_json::from_str(value).map_err(|error| {
+        rusqlite::Error::FromSqlConversionFailure(column_index, Type::Text, Box::new(error))
+    })
 }

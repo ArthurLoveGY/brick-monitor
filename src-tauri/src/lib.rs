@@ -3,6 +3,9 @@ pub mod window;
 pub mod database;
 pub mod salary;
 pub mod commands;
+pub mod error;
+pub mod permissions;
+pub mod autostart;
 
 use tauri::Manager;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -17,12 +20,13 @@ pub fn run() {
             // 初始化数据库
             let db = database::Database::new().expect("Failed to initialize database");
             app.manage(std::sync::Mutex::new(db));
+            app.manage(permissions::MonitoringRuntimeState::default());
 
-            // macOS 毛玻璃效果
+            // 浮窗使用前端自己的圆角玻璃层。
+            // 不再叠加整窗 vibrancy，避免 macOS 把透明窗口按矩形材质渲染，导致四角露出方形底板。
             #[cfg(target_os = "macos")]
             if let Some(floating_win) = app.get_webview_window("floating") {
-                use window_vibrancy::apply_vibrancy;
-                let _ = apply_vibrancy(&floating_win, window_vibrancy::NSVisualEffectMaterial::HudWindow);
+                let _ = floating_win.set_shadow(false);
             }
 
             // 监听主窗口关闭事件，改为隐藏
@@ -40,9 +44,9 @@ pub fn run() {
                 });
             }
 
-            // 启动键盘监听
-            let listener = keyboard::KeyboardListener::new(app.handle().clone());
-            listener.start()?;
+            // 初始化监控权限与监听状态
+            permissions::initialize_monitoring(&app.handle().clone())
+                .map_err(|error| -> Box<dyn std::error::Error> { Box::new(error) })?;
 
             // 创建托盘菜单
             setup_tray(app)?;
@@ -61,6 +65,12 @@ pub fn run() {
             commands::salary::get_work_schedule,
             commands::settings::get_privacy_settings,
             commands::settings::save_privacy_settings,
+            commands::system::get_monitoring_status,
+            commands::system::refresh_monitoring_status,
+            commands::system::request_monitoring_permissions,
+            commands::system::open_macos_privacy_settings,
+            commands::system::get_autostart_status,
+            commands::system::set_autostart_enabled,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

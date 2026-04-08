@@ -6,12 +6,16 @@ use winapi::um::handleapi::CloseHandle;
 use std::ffi::OsString;
 use std::os::windows::ffi::OsStringExt;
 use super::{ActiveWindow, classify_app};
+use crate::error::{AppError, AppResult};
 
-pub fn get_active_window() -> Option<ActiveWindow> {
+pub fn get_active_window() -> AppResult<ActiveWindow> {
     unsafe {
         let hwnd = GetForegroundWindow();
         if hwnd.is_null() {
-            return None;
+            return Err(AppError::new(
+                "ACTIVE_WINDOW_NOT_FOUND",
+                "无法获取当前前台窗口句柄",
+            ));
         }
 
         // 获取窗口标题
@@ -26,7 +30,10 @@ pub fn get_active_window() -> Option<ActiveWindow> {
         // 获取进程名
         let process_handle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, 0, process_id);
         if process_handle.is_null() {
-            return None;
+            return Err(AppError::new(
+                "WINDOWS_PROCESS_OPEN_FAILED",
+                format!("无法打开前台窗口所属进程，PID={process_id}"),
+            ));
         }
 
         let mut process_name: [u16; 512] = [0; 512];
@@ -46,7 +53,7 @@ pub fn get_active_window() -> Option<ActiveWindow> {
 
         let category = classify_app(&app_name);
 
-        Some(ActiveWindow {
+        Ok(ActiveWindow {
             app_name,
             window_title,
             process_id,

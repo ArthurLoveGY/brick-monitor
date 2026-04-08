@@ -6,10 +6,16 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit",
+    "test": "cargo test --manifest-path src-tauri/Cargo.toml",
+    "verify:xcode": "zsh ./scripts/verify-xcode-ready.sh",
     "preview": "vite preview",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
-    "tauri:build": "tauri build"
+    "tauri:build": "tauri build",
+    "release:macos": "pnpm build && tauri build --bundles app,dmg",
+    "release:macos:verify-signing": "zsh ./scripts/verify-macos-signing-env.sh"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.0.0",

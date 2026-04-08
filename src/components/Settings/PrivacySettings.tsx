@@ -1,123 +1,146 @@
-import { useState, useEffect } from 'react';
-import { invoke } from '@tauri-apps/api/core';
+import { useEffect, useState } from 'react';
+import { invokeTauri, type AppErrorPayload } from '../../lib/tauri';
+import styles from './styles.module.css';
 
-interface PrivacySettings {
+interface PrivacySettingsState {
   pause_during_sensitive: boolean;
   exclude_apps: string[];
+  sensitive_window_keywords: string[];
 }
 
 export function PrivacySettings() {
-  const [settings, setSettings] = useState<PrivacySettings>({
+  const [settings, setSettings] = useState<PrivacySettingsState>({
     pause_during_sensitive: true,
     exclude_apps: [],
+    sensitive_window_keywords: [],
   });
-
   const [newApp, setNewApp] = useState('');
+  const [loadError, setLoadError] = useState<AppErrorPayload | null>(null);
+  const [saveError, setSaveError] = useState<AppErrorPayload | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState('');
 
   useEffect(() => {
-    loadSettings();
+    void loadSettings();
   }, []);
 
   async function loadSettings() {
     try {
-      const saved = await invoke<PrivacySettings>('get_privacy_settings');
+      const saved = await invokeTauri<PrivacySettingsState>('get_privacy_settings');
       setSettings(saved);
-    } catch (e) {
-      console.log('Using default privacy settings');
+      setLoadError(null);
+    } catch (error) {
+      setLoadError(error as AppErrorPayload);
     }
   }
 
   async function handleSave() {
     try {
-      await invoke('save_privacy_settings', { settings });
-    } catch (e) {
-      console.error('Failed to save privacy settings:', e);
+      await invokeTauri('save_privacy_settings', { settings });
+      setSaveError(null);
+      setSaveSuccess('隐私设置已保存');
+    } catch (error) {
+      setSaveSuccess('');
+      setSaveError(error as AppErrorPayload);
     }
   }
 
   function addApp() {
-    if (newApp && !settings.exclude_apps.includes(newApp)) {
-      setSettings({
-        ...settings,
-        exclude_apps: [...settings.exclude_apps, newApp],
-      });
-      setNewApp('');
+    if (!newApp || settings.exclude_apps.includes(newApp)) {
+      return;
     }
+
+    setSettings((prev) => ({
+      ...prev,
+      exclude_apps: [...prev.exclude_apps, newApp],
+    }));
+    setNewApp('');
   }
 
   function removeApp(app: string) {
-    setSettings({
-      ...settings,
-      exclude_apps: settings.exclude_apps.filter(a => a !== app),
-    });
+    setSettings((prev) => ({
+      ...prev,
+      exclude_apps: prev.exclude_apps.filter((item) => item !== app),
+    }));
   }
 
   return (
-    <div className="section">
-      <h4>隐私设置</h4>
+    <section className={styles.sectionCard}>
+      <div className={styles.sectionHeader}>
+        <h4>隐私设置</h4>
+        <p>明确哪些场景应该暂停记录，避免敏感应用和窗口标题被纳入统计。</p>
+      </div>
 
-      <div className="toggle">
-        <span className="toggleLabel">敏感应用时暂停记录</span>
+      <div className={styles.toggleRow}>
+        <div className={styles.toggleMeta}>
+          <span className={styles.fieldTitle}>敏感应用时暂停记录</span>
+          <span className={styles.mutedText}>当窗口标题命中敏感关键词时，立即停止记录输入。</span>
+        </div>
         <div
-          className={`toggleSwitch ${settings.pause_during_sensitive ? 'active' : ''}`}
-          onClick={() => setSettings({ ...settings, pause_during_sensitive: !settings.pause_during_sensitive })}
+          className={`${styles.toggleSwitch} ${settings.pause_during_sensitive ? styles.active : ''}`}
+          onClick={() =>
+            setSettings((prev) => ({
+              ...prev,
+              pause_during_sensitive: !prev.pause_during_sensitive,
+            }))
+          }
         />
       </div>
 
-      <div className="field">
-        <label>排除的应用</label>
-        <div style={{ display: 'flex', gap: '8px' }}>
+      <div className={`${styles.field} ${styles.fieldWide}`} style={{ marginTop: 16 }}>
+        <label htmlFor="exclude-app">排除的应用</label>
+        <div className={styles.inlineInputRow}>
           <input
+            id="exclude-app"
+            className={styles.input}
             type="text"
             value={newApp}
-            onChange={e => setNewApp(e.target.value)}
-            placeholder="输入应用名称"
-            style={{ flex: 1 }}
+            onChange={(e) => setNewApp(e.target.value)}
+            placeholder="例如 WeChat、Slack、1Password"
           />
-          <button
-            className="saveBtn"
-            style={{ width: 'auto', padding: '8px 16px' }}
-            onClick={addApp}
-          >
+          <button className={styles.smallButton} onClick={addApp}>
             添加
           </button>
         </div>
       </div>
 
-      <div style={{ marginTop: '8px' }}>
-        {settings.exclude_apps.map(app => (
-          <div
-            key={app}
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              padding: '8px 12px',
-              background: 'rgba(255, 255, 255, 0.05)',
-              borderRadius: '6px',
-              marginBottom: '4px',
-            }}
-          >
-            <span style={{ fontSize: '13px' }}>{app}</span>
-            <button
-              onClick={() => removeApp(app)}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: '#f87171',
-                cursor: 'pointer',
-                fontSize: '12px',
-              }}
-            >
+      <div className={styles.list}>
+        {settings.exclude_apps.length === 0 && (
+          <div className={styles.pathBox}>
+            <span>当前没有排除应用，默认会记录所有应用中的输入。</span>
+          </div>
+        )}
+
+        {settings.exclude_apps.map((app) => (
+          <div key={app} className={styles.listItem}>
+            <span>{app}</span>
+            <button className={styles.removeButton} onClick={() => removeApp(app)}>
               移除
             </button>
           </div>
         ))}
       </div>
 
-      <button className="saveBtn" onClick={handleSave}>
-        保存设置
-      </button>
-    </div>
+      <div className={`${styles.buttonRow} ${styles.fullWidth}`} style={{ marginTop: 16 }}>
+        <button className={styles.primaryButton} onClick={handleSave}>
+          保存隐私设置
+        </button>
+      </div>
+
+      {loadError && (
+        <div className={styles.errorBox}>
+          <strong>{loadError.code}</strong>
+          <p>{loadError.message}</p>
+        </div>
+      )}
+
+      {saveError && (
+        <div className={styles.errorBox}>
+          <strong>{saveError.code}</strong>
+          <p>{saveError.message}</p>
+        </div>
+      )}
+
+      {saveSuccess && <div className={styles.successBox}>{saveSuccess}</div>}
+    </section>
   );
 }

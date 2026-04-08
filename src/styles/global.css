@@ -1,13 +1,70 @@
+:root {
+  color-scheme: light;
+  font-family: 'SF Pro Display', 'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif;
+  --bg-base: #eef3fb;
+  --bg-tint: rgba(255, 255, 255, 0.58);
+  --bg-tint-strong: rgba(255, 255, 255, 0.82);
+  --glass-1: rgba(255, 255, 255, 0.58);
+  --glass-2: rgba(255, 255, 255, 0.72);
+  --glass-3: rgba(255, 255, 255, 0.88);
+  --glass-border: rgba(255, 255, 255, 0.72);
+  --glass-shadow: 0 18px 60px rgba(111, 133, 181, 0.18);
+  --glass-shadow-soft: 0 10px 34px rgba(126, 147, 192, 0.12);
+  --text-strong: #1f2a3d;
+  --text-main: rgba(31, 42, 61, 0.84);
+  --text-muted: rgba(56, 74, 110, 0.64);
+  --text-faint: rgba(76, 92, 128, 0.48);
+  --line-soft: rgba(135, 159, 204, 0.18);
+  --line-strong: rgba(138, 158, 198, 0.28);
+  --accent: #4f7cff;
+  --accent-soft: rgba(79, 124, 255, 0.14);
+  --accent-mint: #52c4a0;
+  --accent-amber: #e8a85a;
+  --danger: #d46b74;
+  --danger-soft: rgba(212, 107, 116, 0.12);
+  --success: #4aa57c;
+  --success-soft: rgba(74, 165, 124, 0.14);
+  --warning: #b78347;
+  --warning-soft: rgba(183, 131, 71, 0.14);
+  --radius-panel: 28px;
+  --radius-card: 22px;
+  --radius-control: 16px;
+}
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   width: 100%;
   height: 100%;
   overflow: hidden;
+}
+
+body {
+  font-family: var(--font-family);
+  color: var(--text-main);
+  background:
+    radial-gradient(circle at 18% 18%, rgba(141, 177, 255, 0.36), transparent 26%),
+    radial-gradient(circle at 82% 14%, rgba(129, 226, 198, 0.22), transparent 24%),
+    radial-gradient(circle at 84% 80%, rgba(255, 211, 151, 0.2), transparent 20%),
+    linear-gradient(160deg, #f4f7fc 0%, #ebf1f8 48%, #e7eef6 100%);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+button {
+  border: none;
+  background: none;
 }
 
 #root {
@@ -15,27 +72,53 @@ html, body {
   height: 100%;
 }
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+html[data-window='main'],
+body[data-window='main'] {
+  height: auto;
+  min-height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+#root[data-window='main'] {
+  height: auto;
+  min-height: 100%;
+}
+
+html[data-window='floating'],
+body[data-window='floating'],
+#root[data-window='floating'] {
+  overflow: hidden;
+  background: transparent;
+}
+
+::selection {
+  background: rgba(79, 124, 255, 0.2);
 }
 
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.24);
+  border-radius: 999px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
+  background: rgba(111, 131, 170, 0.3);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(88, 109, 150, 0.4);
+  background-clip: padding-box;
+}
+
+:focus-visible {
+  outline: 2px solid rgba(79, 124, 255, 0.42);
+  outline-offset: 2px;
 }

@@ -1,4 +1,5 @@
 use serde::Serialize;
+use crate::error::AppResult;
 
 #[derive(Debug, Clone, Serialize)]
 pub struct ActiveWindow {
@@ -24,7 +25,7 @@ mod windows;
 #[cfg(target_os = "macos")]
 mod macos;
 
-pub fn get_active_window() -> Option<ActiveWindow> {
+pub fn get_active_window() -> AppResult<ActiveWindow> {
     #[cfg(target_os = "windows")]
     return windows::get_active_window();
 
@@ -32,7 +33,10 @@ pub fn get_active_window() -> Option<ActiveWindow> {
     return macos::get_active_window();
 
     #[cfg(not(any(target_os = "windows", target_os = "macos")))]
-    return None;
+    return Err(crate::error::AppError::new(
+        "ACTIVE_WINDOW_PLATFORM_UNSUPPORTED",
+        "当前平台未实现活动窗口检测",
+    ));
 }
 
 pub fn classify_app(app_name: &str) -> AppCategory {
@@ -44,7 +48,20 @@ pub fn classify_app(app_name: &str) -> AppCategory {
     } else if ["chrome", "edge", "firefox", "safari", "brave"]
         .iter().any(|s| app_lower.contains(s)) {
         AppCategory::Browser
-    } else if ["terminal", "iterm", "cmd", "powershell", "windowsterminal"]
+    } else if [
+        "terminal",
+        "iterm",
+        "wezterm",
+        "ghostty",
+        "warp",
+        "alacritty",
+        "kitty",
+        "hyper",
+        "cmd",
+        "powershell",
+        "windowsterminal",
+        "终端",
+    ]
         .iter().any(|s| app_lower.contains(s)) {
         AppCategory::Terminal
     } else if ["wechat", "slack", "discord", "teams", "qq", "telegram"]

@@ -46,7 +46,7 @@
 
 - Node.js 18+
 - Rust 1.70+
-- pnpm / npm / yarn
+- pnpm
 
 ```bash
 # 克隆仓库
@@ -54,13 +54,13 @@ git clone https://github.com/ArthurLoveGY/brick-monitor.git
 cd brick-monitor
 
 # 安装依赖
-npm install
+pnpm install
 
 # 开发模式运行
-npm run tauri dev
+pnpm tauri:dev
 
 # 构建发布版本
-npm run tauri build
+pnpm tauri:build
 ```
 
 ## 使用说明
@@ -68,8 +68,23 @@ npm run tauri build
 ### 首次使用
 
 1. 启动应用后，点击托盘图标 → "打开主窗口"
-2. 在设置页面配置你的月薪和工作时间
-3. 悬浮窗会自动显示在桌面上
+2. 在设置页面授予 macOS 所需的辅助功能与输入监控权限
+3. 在设置页面配置你的月薪和工作时间
+4. 悬浮窗会自动显示在桌面上
+
+### macOS 权限
+
+macOS 版本要求以下权限都已授权，否则核心监控会被显式阻断：
+
+- 辅助功能
+- 输入监控
+
+应用内已提供：
+
+- 权限状态检测
+- 打开系统设置入口
+- 重新检测
+- 登录时启动开关
 
 ### 快捷操作
 
@@ -115,6 +130,19 @@ npm run tauri build
 
 - **Windows**: `%APPDATA%/brick-monitor/data.db`
 - **macOS**: `~/Library/Application Support/brick-monitor/data.db`
+
+macOS 登录启动配置保存在：
+
+- `~/Library/LaunchAgents/com.brick-monitor.plist`
+
+## macOS 发布
+
+项目采用 GitHub Releases 分发 macOS 版本，不通过 App Store。
+
+- 本地打包：`pnpm release:macos`
+- Xcode 环境检查：`pnpm verify:xcode`
+- 签名前置检查：`pnpm release:macos:verify-signing`
+- 发布说明见 [docs/macos-release.md](docs/macos-release.md)
 
 ## 开源协议
 

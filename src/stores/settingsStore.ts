@@ -10,6 +10,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   privacySettings: {
     pause_during_sensitive: true,
     exclude_apps: [],
+    sensitive_window_keywords: [],
   },
   setPrivacySettings: (settings) => set({ privacySettings: settings }),
 }));
