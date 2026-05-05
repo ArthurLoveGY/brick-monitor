@@ -1,0 +1,48 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install frontend dependencies
+        run: pnpm install
+
+      - name: Build and bundle
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: 'Brick Monitor ${{ github.ref_name }}'
+          releaseBody: |
+            ## Brick Monitor ${{ github.ref_name }}
+
+            ### Installation
+            1. Download the `.dmg` file below
+            2. Open it and drag Brick Monitor to Applications
+            3. **Right-click** the app and select **Open** to bypass Gatekeeper
+            4. Grant Accessibility and Input Monitoring permissions when prompted
+
+            See the [README](https://github.com/${{ github.repository }}/blob/main/README.md) for detailed setup instructions.
+          releaseDraft: true
+          args: --bundles dmg

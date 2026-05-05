@@ -1,33 +1,42 @@
 .settings {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
   min-height: 0;
-}
-
-.titleBlock {
-  padding: 20px 22px;
-  border-radius: var(--radius-panel);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.52));
-  border: 1px solid rgba(255, 255, 255, 0.86);
-  box-shadow: var(--glass-shadow-soft);
-}
-
-.title {
-  font-size: 26px;
-  color: var(--text-strong);
-}
-
-.subtitle {
-  margin-top: 8px;
-  color: var(--text-muted);
-  line-height: 1.6;
 }
 
 .sections {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+/* ============================================
+   System status section
+   ============================================ */
+
+.sectionTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.readyBadge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.readyBadgeOk {
+  background: rgba(74, 165, 124, 0.12);
+  color: var(--success);
+}
+
+.readyBadgeWarn {
+  background: rgba(232, 168, 90, 0.12);
+  color: var(--warning);
 }
 
 .sectionCard {
@@ -256,6 +265,8 @@
 }
 
 .errorBox,
+.helpBox,
+.keyboardNote,
 .successBox {
   margin-top: 14px;
   padding: 14px 16px;
@@ -267,6 +278,34 @@
   background: rgba(255, 240, 242, 0.86);
   border: 1px solid rgba(244, 197, 201, 0.8);
   color: var(--danger);
+}
+
+.helpBox {
+  background: rgba(237, 244, 254, 0.86);
+  border: 1px solid rgba(186, 210, 242, 0.84);
+  color: var(--text-main);
+}
+
+.helpBox strong {
+  color: var(--text-strong);
+}
+
+.helpBox ol {
+  margin: 8px 0 0 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.keyboardNote {
+  background: rgba(254, 249, 236, 0.86);
+  border: 1px solid rgba(242, 226, 166, 0.84);
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.keyboardNote strong {
+  color: var(--text-main);
 }
 
 .successBox {

@@ -10,14 +10,55 @@ interface SettingsProps {
 }
 
 export function Settings({ monitoringStatus, onMonitoringStatusChange }: SettingsProps) {
+  const statusItems = [
+    {
+      label: '平台',
+      value: monitoringStatus.platform ?? 'macOS',
+      ok: true,
+    },
+    {
+      label: '辅助功能',
+      value: monitoringStatus.accessibilityGranted ? '已授权' : '待授权',
+      ok: monitoringStatus.accessibilityGranted,
+    },
+    {
+      label: '输入监控',
+      value: monitoringStatus.inputMonitoringGranted ? '已授权' : '待授权',
+      ok: monitoringStatus.inputMonitoringGranted,
+    },
+    {
+      label: '监听器',
+      value: monitoringStatus.listenerStarted ? '已启动' : '未启动',
+      ok: monitoringStatus.listenerStarted,
+    },
+  ];
+
+  const allReady = statusItems.every((item) => item.ok);
+
   return (
     <div className={styles.settings}>
-      <div className={styles.titleBlock}>
-        <h3 className={styles.title}>系统面板</h3>
-        <p className={styles.subtitle}>
-          把每日薪资、权限和隐私偏好整理成一个固定侧边设置面板，避免关键配置被埋到页面下面。
-        </p>
-      </div>
+      {/* System status grid */}
+      <section className={styles.sectionCard}>
+        <div className={styles.sectionHeader}>
+          <div className={styles.sectionTitleRow}>
+            <h4>系统状态</h4>
+            <span className={`${styles.readyBadge} ${allReady ? styles.readyBadgeOk : styles.readyBadgeWarn}`}>
+              {allReady ? '全部就绪' : '部分未授权'}
+            </span>
+          </div>
+          <p>监控系统各组件运行状态，有异常时请点击下方按钮授权。</p>
+        </div>
+
+        <div className={styles.statusGrid}>
+          {statusItems.map((item) => (
+            <div key={item.label} className={styles.statusCard}>
+              <span className={styles.statusLabel}>{item.label}</span>
+              <strong className={item.ok ? styles.statusOk : styles.statusBlocked}>{item.value}</strong>
+            </div>
+          ))}
+        </div>
+      </section>
+
       <div className={styles.sections}>
         <SalaryForm />
         <MacosAccessPanel monitoringStatus={monitoringStatus} onStatusChange={onMonitoringStatusChange} />

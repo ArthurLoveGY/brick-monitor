@@ -1,189 +1,342 @@
+/* ============================================
+   Dashboard — compact at-a-glance layout
+   ============================================ */
+
 .dashboard {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
 }
 
-.hero,
-.metricCard,
-.panel,
-.errorCard {
-  border-radius: 22px;
-  background: rgba(255, 255, 255, 0.88);
-  border: 1px solid rgba(255, 255, 255, 0.96);
-  box-shadow: 0 12px 28px rgba(116, 133, 168, 0.12);
-}
+/* ============================================
+   KPI Row — 5 metric cards
+   ============================================ */
 
-.hero {
+.kpiRow {
   display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.95fr);
-  gap: 14px;
-  padding: 18px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
 }
 
-.heroCopy {
+.kpiCard {
+  padding: 14px 18px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(252, 253, 255, 0.6));
+  border: 1px solid rgba(255, 255, 255, 0.86);
+  box-shadow: 0 8px 22px rgba(111, 128, 166, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: transform 140ms ease, box-shadow 140ms ease;
+}
+
+.kpiCard:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px rgba(111, 128, 166, 0.12);
+}
+
+.kpiLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-faint);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.kpiValue {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text-strong);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.kpiCurrency {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-right: 1px;
+}
+
+.kpiWithProgress {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.eyebrow {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--text-faint);
+.miniProgress {
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(184, 198, 228, 0.28);
+  overflow: hidden;
 }
 
-.heroCopy h2 {
-  font-size: 26px;
-  color: var(--text-strong);
+.miniProgressFill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent);
+  transition: width 600ms cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
-.heroCopy p {
-  color: var(--text-muted);
-  line-height: 1.58;
+.miniProgressFill.codeFill {
+  background: var(--accent-mint);
 }
 
-.heroStats {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.heroStat {
-  padding: 14px;
-  border-radius: 18px;
-  background: linear-gradient(180deg, rgba(245, 248, 255, 0.95), rgba(239, 244, 255, 0.78));
-  border: 1px solid rgba(231, 237, 250, 0.92);
-}
-
-.heroStat span {
-  display: block;
-  font-size: 12px;
-  color: var(--text-faint);
-}
-
-.heroStat strong {
-  display: block;
-  margin-top: 10px;
-  font-size: 20px;
-  color: var(--text-strong);
-}
-
-.errorCard {
-  padding: 16px 18px;
-  background: rgba(255, 243, 245, 0.92);
-}
-
-.errorCard strong {
-  color: var(--danger);
-}
-
-.errorCard p {
-  margin-top: 8px;
-  line-height: 1.58;
-}
-
-.metricGrid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.metricCard {
-  padding: 16px 18px;
-}
-
-.metricCard span {
-  font-size: 12px;
-  color: var(--text-faint);
-}
-
-.metricCard strong {
-  display: block;
-  margin-top: 10px;
-  font-size: 28px;
-  line-height: 1;
-  color: var(--text-strong);
-}
-
-.metricCard small {
-  display: block;
-  margin-top: 8px;
-  color: var(--text-muted);
-}
-
-.tabs {
-  display: inline-flex;
+.statusValue {
+  display: flex;
+  align-items: center;
   gap: 8px;
-  padding: 6px;
+  font-size: 20px;
+}
+
+.statusDotInline {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status_coding {
+  background: var(--accent);
+  box-shadow: 0 0 0 3px rgba(79, 124, 255, 0.18);
+}
+
+.status_talking {
+  background: var(--accent-mint);
+  box-shadow: 0 0 0 3px rgba(82, 196, 160, 0.18);
+}
+
+.status_balanced {
+  background: var(--accent-amber);
+  box-shadow: 0 0 0 3px rgba(232, 168, 90, 0.18);
+}
+
+.status_idle {
+  background: #bcc6de;
+  box-shadow: 0 0 0 3px rgba(188, 198, 222, 0.18);
+}
+
+/* ============================================
+   Error banner
+   ============================================ */
+
+.errorBanner {
+  padding: 8px 16px;
+  border-radius: 14px;
+  background: rgba(255, 241, 243, 0.78);
+  border: 1px solid rgba(255, 205, 210, 0.6);
+  color: #a84852;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.errorBanner strong {
+  font-weight: 700;
+}
+
+/* ============================================
+   Tab bar
+   ============================================ */
+
+.tabBar {
+  display: inline-flex;
+  gap: 6px;
+  padding: 5px;
   width: fit-content;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.78);
-  border: 1px solid rgba(255, 255, 255, 0.96);
+  background: rgba(255, 255, 255, 0.68);
+  border: 1px solid rgba(255, 255, 255, 0.88);
+  box-shadow: 0 4px 14px rgba(111, 128, 166, 0.06);
 }
 
 .tab {
-  min-width: 108px;
-  padding: 10px 14px;
+  min-width: 96px;
+  padding: 8px 14px;
   border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
   color: var(--text-muted);
   cursor: pointer;
+  transition: all 180ms ease;
 }
 
 .tab:hover {
   color: var(--text-strong);
+  background: rgba(255, 255, 255, 0.6);
 }
 
-.tab.active,
-.active {
+.tabActive {
   background: #6f8cff;
   color: #fff;
-  box-shadow: 0 10px 20px rgba(111, 140, 255, 0.24);
+  font-weight: 600;
+  box-shadow: 0 8px 18px rgba(111, 140, 255, 0.22);
 }
 
-.chartGrid {
+.tabActive:hover {
+  background: #6f8cff;
+  color: #fff;
+}
+
+/* ============================================
+   Chart row — 2-panel grid
+   ============================================ */
+
+.chartRow {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
+  gap: 12px;
 }
 
 .panel {
-  padding: 18px;
+  padding: 16px 18px 12px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(253, 254, 255, 0.54));
+  border: 1px solid rgba(255, 255, 255, 0.86);
+  box-shadow: 0 10px 24px rgba(111, 128, 166, 0.08);
+  display: flex;
+  flex-direction: column;
+}
+
+.panelFull {
+  grid-column: 1 / -1;
 }
 
 .panelHeader {
-  margin-bottom: 16px;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-shrink: 0;
 }
 
 .panelHeader h3 {
-  margin-top: 6px;
-  font-size: 20px;
+  font-size: 15px;
+  font-weight: 700;
   color: var(--text-strong);
+  letter-spacing: -0.01em;
 }
+
+.panelHint {
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+/* ============================================
+   Focus bars — custom visualization
+   ============================================ */
+
+.focusBars {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  flex: 1;
+  justify-content: center;
+}
+
+.focusRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.focusMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 110px;
+  flex-shrink: 0;
+}
+
+.focusSwatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.focusLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.focusRatio {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-faint);
+  margin-left: auto;
+}
+
+.focusTrack {
+  flex: 1;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(184, 198, 228, 0.22);
+  overflow: hidden;
+}
+
+.focusFill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 500ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.focusCount {
+  width: 56px;
+  text-align: right;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-main);
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.focusEmpty {
+  text-align: center;
+  color: var(--text-faint);
+  font-size: 13px;
+  padding: 20px 0;
+}
+
+/* ============================================
+   Pie chart
+   ============================================ */
 
 .pieWrap {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex: 1;
 }
+
+/* ============================================
+   App list
+   ============================================ */
 
 .appList {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
+  flex: 1;
+  overflow-y: auto;
 }
 
 .appRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 14px 16px;
-  border-radius: 16px;
-  background: rgba(243, 246, 252, 0.9);
-  border: 1px solid rgba(231, 237, 249, 0.98);
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: rgba(243, 246, 252, 0.7);
+  border: 1px solid rgba(231, 237, 249, 0.9);
+  transition: background 140ms ease;
+}
+
+.appRow:hover {
+  background: rgba(237, 241, 250, 0.9);
 }
 
 .appInfo {
@@ -191,31 +344,63 @@
   align-items: center;
   gap: 10px;
   min-width: 0;
+  flex: 1;
 }
 
 .appSwatch {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   flex-shrink: 0;
 }
 
 .appName {
+  font-size: 13px;
   color: var(--text-main);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.appRow strong {
+.appCount {
+  font-size: 14px;
   color: var(--text-strong);
+  font-variant-numeric: tabular-nums;
 }
 
-@media (max-width: 980px) {
-  .hero,
-  .metricGrid,
-  .heroStats,
-  .chartGrid {
+.appEmpty {
+  text-align: center;
+  color: var(--text-faint);
+  font-size: 13px;
+  padding: 20px 0;
+}
+
+/* ============================================
+   Responsive
+   ============================================ */
+
+@media (max-width: 1080px) {
+  .kpiRow {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 860px) {
+  .kpiRow {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .chartRow {
+    grid-template-columns: 1fr;
+  }
+
+  .kpiValue {
+    font-size: 22px;
+  }
+}
+
+@media (max-width: 540px) {
+  .kpiRow {
     grid-template-columns: 1fr;
   }
 }

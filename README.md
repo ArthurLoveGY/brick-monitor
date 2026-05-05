@@ -1,22 +1,66 @@
-# 搬砖实时监控 🧱
+# Brick Monitor (搬砖实时监控)
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS-lightgrey.svg)](https://github.com/ArthurLoveGY/brick-monitor)
+[![Platform](https://img.shields.io/badge/platform-macOS-lightgrey.svg)](https://github.com/ArthurLoveGY/brick-monitor)
 
-> 程序员专属工时监控神器 —— 实时追踪你的"搬砖"时长，自动计算今日收入！
+> "搬砖" (bān zhuān) is Chinese internet slang for grinding at work. Brick Monitor tracks your keyboard activity, calculates real-time earnings, and shows your daily work rhythm — running quietly in your system tray.
 
-## 功能特色
+## Features
 
-- **实时监控** - 追踪你在 IDE、终端、浏览器等应用中的按键活动
-- **收入计算** - 根据月薪和工作时间，自动计算今日已赚多少钱
-- **下班倒计时** - 显示距离下班还有多长时间
-- **工作状态分析** - 智能识别 Coding / 摸鱼 / 聊天 状态
-- **悬浮窗显示** - 小巧的悬浮窗，不影响工作，一眼看清重要数据
-- **隐私保护** - 支持排除敏感应用，不记录隐私窗口
+- **Global keyboard tracking** — counts keystrokes across all apps and categorizes by type (IDE, Browser, Terminal, Chat, Office)
+- **Real-time earnings** — configurable salary calculator computes hourly and daily earnings based on elapsed work time
+- **Floating widget** — always-on-top translucent panel showing countdown, earnings, keystrokes, and a Code/Talk heartbeat gauge
+- **Full dashboard** — bar, area, line, and pie charts for daily, hourly, and historical trends
+- **Privacy controls** — exclude apps or pause tracking when a sensitive window (banking, passwords) is active
+- **System tray** — menu bar icon with quick toggle for the floating widget and access to the main window
+- **Auto-start** — optional LaunchAgent to launch on login
 
-## 界面预览
+## System Requirements
 
-### 悬浮窗
+- macOS 13.0 (Ventura) or later
+- Apple Silicon or Intel Mac
+
+> **Note:** The current version supports **US English (QWERTY)** keyboard layouts. Key names may display incorrectly on other layouts.
+
+## Installation
+
+### Download from GitHub Releases
+
+1. Go to the [Releases](https://github.com/ArthurLoveGY/brick-monitor/releases) page
+2. Download the latest `.dmg` file
+3. Open the DMG and drag **Brick Monitor** to your Applications folder
+
+### First Launch (Gatekeeper Bypass)
+
+Brick Monitor is distributed unsigned (open source, no Developer ID certificate). macOS Gatekeeper will block it on first launch:
+
+1. **Right-click** (or Control-click) the app in Finder and select **Open**
+2. Click **Open** in the confirmation dialog
+
+Or run in Terminal:
+
+```bash
+xattr -cr /Applications/Brick\ Monitor.app
+```
+
+### Grant Permissions
+
+Brick Monitor needs two macOS permissions:
+
+| Permission | Purpose |
+|-----------|---------|
+| Accessibility | Detect the currently active application |
+| Input Monitoring | Listen for global keyboard events |
+
+When you first launch the app, the settings panel will guide you through granting both. If the system prompts don't appear, open **System Settings → Privacy & Security** and manually enable Brick Monitor ("搬砖实时监控") under both sections.
+
+You may need to restart the app after granting permissions.
+
+## Usage
+
+### Floating Widget
+
+Once permissions are granted, a small translucent panel appears on your desktop:
 
 ```
 ┌─────────────────────────────┐
@@ -27,130 +71,137 @@
 └─────────────────────────────┘
 ```
 
-### 主窗口
+Drag the widget to reposition it anywhere on screen.
 
-- 今日按键统计图表
-- 应用分类占比
-- 历史数据查看
-- 工资配置设置
+### System Tray
 
-## 安装
+- **Left click** the tray icon to toggle the floating widget
+- **Right click** for menu: toggle widget, open main window, quit
 
-### 下载安装包
+### Main Dashboard
 
-前往 [Releases](https://github.com/ArthurLoveGY/brick-monitor/releases) 页面下载最新版本的安装包。
+Open the dashboard for detailed statistics and settings:
 
-### 从源码构建
+- Daily keystroke trend (bar chart)
+- Hourly distribution (area chart)
+- App breakdown (pie chart)
+- Historical comparison (line chart)
+- Settings: salary config, permissions, privacy exclusions
 
-**环境要求：**
+### Salary Configuration
 
-- Node.js 18+
-- Rust 1.70+
-- pnpm
+In the Settings tab, configure:
 
-```bash
-# 克隆仓库
-git clone https://github.com/ArthurLoveGY/brick-monitor.git
-cd brick-monitor
+- Monthly salary and currency
+- Work days per month
+- Work hours per day
+- Start/end time
+- Lunch break duration
 
-# 安装依赖
-pnpm install
+The floating widget then shows real-time earnings based on elapsed work time × hourly rate.
 
-# 开发模式运行
-pnpm tauri:dev
+### App Classification
 
-# 构建发布版本
-pnpm tauri:build
+The app automatically categorizes keystrokes by the active application:
+
+| Category | Apps detected |
+|----------|-------------|
+| IDE | VSCode, IntelliJ IDEA, Cursor, Vim, Xcode |
+| Terminal | Terminal, iTerm2, Warp, Alacritty, Kitty, Ghostty |
+| Browser | Chrome, Edge, Firefox, Safari, Brave |
+| Chat | WeChat, QQ, Slack, Discord, Telegram |
+| Office | Word, Excel, PowerPoint, Notion, Obsidian |
+
+## Privacy
+
+Brick Monitor stores all data **locally on your device**. We never:
+
+- Upload any data to the cloud
+- Record the actual content of your keystrokes
+- Monitor password fields or sensitive windows
+
+Only metadata is recorded: key type (character/function/modifier), timestamp, and active application name.
+
+### Data Location
+
+```
+~/Library/Application Support/brick-monitor/data.db
 ```
 
-## 使用说明
+### LaunchAgent
 
-### 首次使用
+```
+~/Library/LaunchAgents/com.brick-monitor.app.plist
+```
 
-1. 启动应用后，点击托盘图标 → "打开主窗口"
-2. 在设置页面授予 macOS 所需的辅助功能与输入监控权限
-3. 在设置页面配置你的月薪和工作时间
-4. 悬浮窗会自动显示在桌面上
+## Known Limitations
 
-### macOS 权限
+- **Keyboard layout**: Only US English (QWERTY) is fully supported. AZERTY, QWERTZ, and other layouts may show incorrect key names.
+- **Code signing**: Distributed unsigned via GitHub. First launch requires Gatekeeper bypass (see Installation).
+- **Window detection**: Some full-screen or Stage Manager applications may not be detected correctly.
 
-macOS 版本要求以下权限都已授权，否则核心监控会被显式阻断：
+## Development
 
-- 辅助功能
-- 输入监控
+### Prerequisites
 
-应用内已提供：
+- Node.js 20+
+- pnpm
+- Rust (stable)
+- Xcode Command Line Tools
 
-- 权限状态检测
-- 打开系统设置入口
-- 重新检测
-- 登录时启动开关
+Verify Xcode:
 
-### 快捷操作
+```bash
+pnpm verify:xcode
+```
 
-- **左键托盘图标** - 显示/隐藏悬浮窗
-- **右键托盘图标** - 打开菜单
-- **拖动悬浮窗** - 按住左键拖动到任意位置
+### Setup
 
-### 应用分类
+```bash
+pnpm install
+```
 
-自动识别以下应用类型：
+### Run in Development
 
-| 类别       | 应用                                                 |
-| ---------- | ---------------------------------------------------- |
-| 💻 Coding  | VSCode, IDEA, Cursor, Vim, Terminal, CMD, PowerShell |
-| 💬 Chat    | 微信, QQ, Slack, Discord, Telegram                   |
-| 🌐 Browser | Chrome, Edge, Firefox, Safari                        |
-| 📄 Office  | Word, Excel, PowerPoint, Notion                      |
+```bash
+pnpm tauri:dev
+```
 
-## 技术栈
+### Type Check & Lint
 
-- **前端**: React + TypeScript + Tailwind CSS
-- **后端**: Rust + Tauri 2.0
-- **数据库**: SQLite
-- **监控**: rdev (跨平台键盘监听)
+```bash
+pnpm typecheck
+```
 
-## 隐私说明
+### Run Tests
 
-本应用**不会**：
+```bash
+pnpm test
+```
 
-- 上传任何数据到云端
-- 记录具体的按键内容
-- 监控密码输入框
+### Build for GitHub Release
 
-本应用**仅记录**：
+```bash
+pnpm release:github
+```
 
-- 按键时间戳
-- 按键类型（字符/功能键等）
-- 当前活动窗口的应用名称
+The `.dmg` will be in `src-tauri/target/release/bundle/dmg/`.
 
-## 配置文件
+## Tech Stack
 
-数据存储在本地：
+| Layer | Technology |
+|-------|-----------|
+| Desktop Framework | Tauri 2 |
+| Backend | Rust |
+| Frontend | React 18 + TypeScript |
+| Build Tool | Vite 5 |
+| State Management | Zustand |
+| Charts | Recharts |
+| Database | SQLite (rusqlite) |
 
-- **Windows**: `%APPDATA%/brick-monitor/data.db`
-- **macOS**: `~/Library/Application Support/brick-monitor/data.db`
+## License
 
-macOS 登录启动配置保存在：
-
-- `~/Library/LaunchAgents/com.brick-monitor.plist`
-
-## macOS 发布
-
-项目采用 GitHub Releases 分发 macOS 版本，不通过 App Store。
-
-- 本地打包：`pnpm release:macos`
-- Xcode 环境检查：`pnpm verify:xcode`
-- 签名前置检查：`pnpm release:macos:verify-signing`
-- 发布说明见 [docs/macos-release.md](docs/macos-release.md)
-
-## 开源协议
-
-[MIT License](LICENSE)
-
-## 致谢
-
-如果你觉得这个项目有趣，欢迎 ⭐ Star 支持！
+[MIT](LICENSE)
 
 ---
 

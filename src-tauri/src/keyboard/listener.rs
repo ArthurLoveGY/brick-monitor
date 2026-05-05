@@ -27,9 +27,13 @@ impl KeyboardListener {
     pub fn start(&self) -> Result<(), Box<dyn std::error::Error>> {
         LISTENER_ENABLED.store(true, Ordering::SeqCst);
 
-        if LISTENER_STARTED.swap(true, Ordering::SeqCst) {
+        // 如果监听器线程已存活，不重复启动
+        if LISTENER_STARTED.load(Ordering::SeqCst) {
             return Ok(());
         }
+
+        // 原子标记已启动，避免竞态：先标记再 spawn，线程退出时复位
+        LISTENER_STARTED.store(true, Ordering::SeqCst);
 
         let app_handle = self.app_handle.clone();
         let buffer = self.buffer.clone();
@@ -46,11 +50,15 @@ impl KeyboardListener {
             };
 
             let listen_result = start_platform_listener(event_callback);
+
+            // 线程退出意味着监听器死亡（系统终止 tap / 权限变更 / 休眠恢复等）
+            LISTENER_STARTED.store(false, Ordering::SeqCst);
+            LISTENER_ENABLED.store(false, Ordering::SeqCst);
+
             if let Err(error) = listen_result {
-                LISTENER_STARTED.store(false, Ordering::SeqCst);
                 let app_error = crate::error::AppError::new(
                     "KEYBOARD_LISTENER_RUNTIME_FAILED",
-                    format!("启动键盘监听失败: {error}"),
+                    format!("键盘监听线程异常退出: {error}"),
                 );
                 let _ = permissions::record_runtime_error(&app_handle, app_error);
             }
@@ -400,8 +408,8 @@ mod macos {
             57 => ("CapsLock", 0x39),
             58 | 61 => ("Alt", 0xE2),
             59 | 62 => ("Ctrl", 0xE0),
-            63 => ("Fn", 0x00),
-            64 => ("F17", 0x00),
+            63 => ("Fn", 0x65),
+            64 => ("F17", 0x6C),
             65 => ("NumpadDecimal", 0x63),
             67 => ("NumpadMultiply", 0x55),
             69 => ("NumpadPlus", 0x57),
@@ -409,8 +417,8 @@ mod macos {
             75 => ("NumpadDivide", 0x54),
             76 => ("Enter", 0x28),
             78 => ("NumpadMinus", 0x56),
-            79 => ("F18", 0x00),
-            80 => ("F19", 0x00),
+            79 => ("F18", 0x6D),
+            80 => ("F19", 0x6E),
             81 => ("NumpadEquals", 0x67),
             82 => ("Numpad0", 0x62),
             83 => ("Numpad1", 0x59),
@@ -429,12 +437,12 @@ mod macos {
             100 => ("F8", 0x41),
             101 => ("F9", 0x42),
             103 => ("F11", 0x44),
-            105 => ("F13", 0x00),
-            106 => ("F16", 0x00),
-            107 => ("F14", 0x00),
+            105 => ("F13", 0x68),
+            106 => ("F16", 0x6B),
+            107 => ("F14", 0x69),
             109 => ("F10", 0x43),
             111 => ("F12", 0x45),
-            113 => ("F15", 0x00),
+            113 => ("F15", 0x6A),
             114 => ("Insert", 0x49),
             115 => ("Home", 0x4A),
             116 => ("PageUp", 0x4B),

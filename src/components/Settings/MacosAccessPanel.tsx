@@ -81,7 +81,7 @@ export function MacosAccessPanel({ monitoringStatus, onStatusChange }: MacosAcce
     <section className={styles.sectionCard}>
       <div className={styles.sectionHeader}>
         <h4>macOS 权限与启动</h4>
-        <p>把输入监控、辅助功能、监听器和登录项集中到一个状态面板里，减少系统配置的来回跳转。</p>
+        <p>监控键盘活动需要"辅助功能"和"输入监控"两项权限，点击下方按钮授权后即可开始使用。</p>
       </div>
 
       <div className={styles.statusGrid}>
@@ -103,6 +103,22 @@ export function MacosAccessPanel({ monitoringStatus, onStatusChange }: MacosAcce
             {monitoringStatus.listenerStarted ? '已启动' : '未启动'}
           </strong>
         </div>
+      </div>
+
+      {(!monitoringStatus.accessibilityGranted || !monitoringStatus.inputMonitoringGranted) && (
+        <div className={styles.helpBox}>
+          <strong>如何授权？</strong>
+          <ol>
+            <li>点击下方"请求权限"，在弹出的系统对话框中确认授权。</li>
+            <li>如果权限弹窗没有出现，点击"打开系统设置"进入隐私页面。</li>
+            <li>在左侧列表中找到"辅助功能"和"输入监控"，在右侧勾选 <strong>"搬砖实时监控"</strong>。</li>
+            <li>授权后可能需要重启本应用使其生效。</li>
+          </ol>
+        </div>
+      )}
+
+      <div className={styles.keyboardNote}>
+        <span>当前版本仅适配 <strong>美式英文 (US QWERTY)</strong> 键盘布局，其他布局下按键名称可能显示不正确。</span>
       </div>
 
       {monitoringStatus.lastError && (

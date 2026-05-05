@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { listen } from '@tauri-apps/api/event';
 import { getCurrentWindow } from '@tauri-apps/api/window';
+import { AnimatePresence, motion } from 'framer-motion';
 import { FloatingWidget } from './components/FloatingWidget';
 import { Dashboard } from './components/Dashboard';
 import { Settings } from './components/Settings';
@@ -12,6 +13,7 @@ function App() {
   const [currentWindow, setCurrentWindow] = useState('floating');
   const [monitoringStatus, setMonitoringStatus] = useState<MonitoringStatus | null>(null);
   const [statusError, setStatusError] = useState<AppErrorPayload | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   useEffect(() => {
     async function detectWindow() {
@@ -51,89 +53,127 @@ function App() {
     }
   }, [currentWindow]);
 
-  const blocked = monitoringStatus ? !monitoringStatus.ready : false;
-  const summary = [
-    {
-      label: '平台',
-      value: monitoringStatus?.platform ?? 'macOS',
-    },
-    {
-      label: '辅助功能',
-      value: monitoringStatus?.accessibilityGranted ? '已授权' : '待授权',
-    },
-    {
-      label: '输入监控',
-      value: monitoringStatus?.inputMonitoringGranted ? '已授权' : '待授权',
-    },
-    {
-      label: '监听器',
-      value: monitoringStatus?.listenerStarted ? '已启动' : '未启动',
-    },
-  ];
+  const openDrawer = useCallback(() => setDrawerOpen(true), []);
+  const closeDrawer = useCallback(() => setDrawerOpen(false), []);
+
+  // Keyboard shortcut: Escape closes drawer
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === 'Escape' && drawerOpen) {
+        closeDrawer();
+      }
+    }
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [drawerOpen, closeDrawer]);
 
   if (currentWindow === 'floating') {
     return <FloatingWidget />;
   }
 
+  const blocked = monitoringStatus ? !monitoringStatus.ready : false;
+  const hasAlert = Boolean(statusError || (blocked && monitoringStatus?.lastError));
+
   return (
     <div className="appShell">
       <div className="appFrame">
+        {/* Compact header bar */}
         <header className="topbar">
           <div className="brand">
-            <span className="eyebrow">Brick Monitor</span>
+            <svg className="brandMark" width="28" height="28" viewBox="0 0 28 28" fill="none">
+              <rect width="28" height="28" rx="8" fill="url(#brandGrad)" />
+              <rect x="6" y="10" width="4" height="12" rx="2" fill="white" opacity="0.9" />
+              <rect x="12" y="6" width="4" height="16" rx="2" fill="white" opacity="0.9" />
+              <rect x="18" y="9" width="4" height="13" rx="2" fill="white" opacity="0.7" />
+              <defs>
+                <linearGradient id="brandGrad" x1="0" y1="0" x2="28" y2="28">
+                  <stop stopColor="#7390ff" />
+                  <stop offset="1" stopColor="#5b7ce6" />
+                </linearGradient>
+              </defs>
+            </svg>
             <h1>搬砖实时监控</h1>
-            <p>把今天的工作状态、输入趋势和系统权限放在一个真正可读的桌面工作台里。</p>
           </div>
 
-          <div className={`statusBadge ${blocked ? 'warning' : ''} ${statusError ? 'danger' : ''}`}>
-            <span className="statusDot" />
-            {statusError
-              ? '状态读取失败'
-              : blocked
-                ? '监控未就绪'
-                : monitoringStatus
-                  ? '监控运行中'
-                  : '正在检测'}
+          <div className="topbarRight">
+            <div className={`statusPill ${statusError ? 'danger' : ''} ${blocked && !statusError ? 'warning' : ''}`}>
+              <span className="statusDot" />
+              <span className="statusText">
+                {statusError ? '状态异常' : blocked ? '监控未就绪' : monitoringStatus ? '监控运行中' : '检测中'}
+              </span>
+            </div>
+
+            <button className="settingsTrigger" onClick={openDrawer} aria-label="打开设置">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+                <circle cx="9" cy="9" r="2.5" />
+                <path d="M9 1.5v2M9 14.5v2M1.5 9h2M14.5 9h2M3.7 3.7l1.4 1.4M12.9 12.9l1.4 1.4M3.7 14.3l1.4-1.4M12.9 5.1l1.4-1.4" />
+              </svg>
+              <span>设置</span>
+            </button>
           </div>
         </header>
 
-        <section className="summaryGrid">
-          {summary.map((item) => (
-            <article key={item.label} className="summaryCard">
-              <span>{item.label}</span>
-              <strong>{item.value}</strong>
-            </article>
-          ))}
-        </section>
-
-        {statusError && (
-          <section className="statusPanel danger">
-            <span className="statusTitle">运行时错误</span>
-            <p>{statusError.code}: {statusError.message}</p>
-          </section>
+        {/* Alert banner — compact, dismissible */}
+        {hasAlert && (
+          <div className={`alertBanner ${statusError ? 'danger' : 'warning'}`}>
+            <svg className="alertIcon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.4" />
+              <path d="M8 4.5v3.5M8 11v.01" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+            </svg>
+            <span className="alertText">
+              {statusError
+                ? `${statusError.code}: ${statusError.message}`
+                : monitoringStatus?.lastError
+                  ? `${monitoringStatus.lastError.code}: ${monitoringStatus.lastError.message}`
+                  : '监控服务尚未就绪，请在设置中完成权限配置'}
+            </span>
+          </div>
         )}
 
-        {blocked && monitoringStatus?.lastError && (
-          <section className="statusPanel warning">
-            <span className="statusTitle">权限阻断</span>
-            <p>{monitoringStatus.lastError.code}: {monitoringStatus.lastError.message}</p>
-          </section>
-        )}
-
+        {/* Dashboard — full width */}
         <main className="workspace">
-          <section className="workspaceMain">
-            <Dashboard />
-          </section>
-
-          <aside className="workspaceSide">
-            {monitoringStatus && (
-              <Settings
-                monitoringStatus={monitoringStatus}
-                onMonitoringStatusChange={setMonitoringStatus}
-              />
-            )}
-          </aside>
+          <Dashboard />
         </main>
+
+        {/* Settings drawer */}
+        <AnimatePresence>
+          {drawerOpen && (
+            <>
+              <motion.div
+                className="drawerOverlay"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.22 }}
+                onClick={closeDrawer}
+              />
+              <motion.aside
+                className="drawer"
+                initial={{ x: '100%' }}
+                animate={{ x: 0 }}
+                exit={{ x: '100%' }}
+                transition={{ type: 'spring', damping: 28, stiffness: 260 }}
+              >
+                <div className="drawerHeader">
+                  <h2>系统设置</h2>
+                  <button className="drawerClose" onClick={closeDrawer} aria-label="关闭设置">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                      <path d="M5 5l10 10M15 5L5 15" />
+                    </svg>
+                  </button>
+                </div>
+                <div className="drawerBody">
+                  {monitoringStatus && (
+                    <Settings
+                      monitoringStatus={monitoringStatus}
+                      onMonitoringStatusChange={setMonitoringStatus}
+                    />
+                  )}
+                </div>
+              </motion.aside>
+            </>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

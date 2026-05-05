@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { listen } from '@tauri-apps/api/event';
 import {
-  Area,
-  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
@@ -56,6 +54,14 @@ interface SalaryInfo {
   work_progress: number;
 }
 
+const PIE_COLORS = ['#7390ff', '#5fc4a8', '#f1b87a', '#e0889a', '#8ba4de', '#8cc0d6'];
+
+const FOCUS_COLORS: Record<string, string> = {
+  Code: '#7390ff',
+  Talk: '#5fc4a8',
+  Other: '#bcc6de',
+};
+
 export function Dashboard() {
   const [activeTab, setActiveTab] = useState<'today' | 'history' | 'apps'>('today');
   const [todayStats, setTodayStats] = useState<TodayStats>({ total: 0, charCount: 0, codeCount: 0 });
@@ -100,9 +106,7 @@ export function Dashboard() {
   }
 
   const statusLabel = useMemo(() => {
-    if (!heartbeat) {
-      return '待分析';
-    }
+    if (!heartbeat) return '—';
     switch (heartbeat.status) {
       case 'Coding':
         return '深度编码';
@@ -115,210 +119,255 @@ export function Dashboard() {
     }
   }, [heartbeat]);
 
-  const pieColors = ['#7390ff', '#66c3b0', '#f1b270', '#d98a9c', '#8aa0d4', '#8fbcd2'];
+  const focusBars = useMemo(() => {
+    if (!heartbeat) return [];
+    return [
+      { label: 'Code', value: heartbeat.code_keystrokes, ratio: heartbeat.code_ratio },
+      { label: 'Talk', value: heartbeat.talk_keystrokes, ratio: heartbeat.talk_ratio },
+      { label: 'Other', value: heartbeat.other_keystrokes, ratio: Math.max(0, 100 - heartbeat.code_ratio - heartbeat.talk_ratio) },
+    ];
+  }, [heartbeat]);
+
+  const maxFocusValue = useMemo(
+    () => Math.max(...focusBars.map((f) => f.value), 1),
+    [focusBars],
+  );
+
+  const TAB_ITEMS = [
+    { key: 'today' as const, label: '今日走势' },
+    { key: 'history' as const, label: '近 30 天' },
+    { key: 'apps' as const, label: '应用分布' },
+  ];
 
   return (
     <div className={styles.dashboard}>
-      <section className={styles.hero}>
-        <div className={styles.heroCopy}>
-          <span className={styles.eyebrow}>Today Summary</span>
-          <h2>今天的工作节奏</h2>
-          <p>先把最重要的信息放到第一屏：输入量、收益、专注状态和工作进度。</p>
-        </div>
+      {/* ============================================
+          KPI Row — 5 cards, all visible at a glance
+          ============================================ */}
+      <section className={styles.kpiRow}>
+        <article className={styles.kpiCard}>
+          <span className={styles.kpiLabel}>今日收益</span>
+          <strong className={styles.kpiValue}>
+            <span className={styles.kpiCurrency}>¥</span>
+            {salaryInfo ? salaryInfo.today_earnings.toFixed(1) : '—'}
+          </strong>
+        </article>
 
-        <div className={styles.heroStats}>
-          <div className={styles.heroStat}>
-            <span>当前状态</span>
-            <strong>{statusLabel}</strong>
+        <article className={styles.kpiCard}>
+          <span className={styles.kpiLabel}>工作进度</span>
+          <div className={styles.kpiWithProgress}>
+            <strong className={styles.kpiValue}>
+              {Math.round(salaryInfo?.work_progress ?? 0)}%
+            </strong>
+            <div className={styles.miniProgress}>
+              <div
+                className={styles.miniProgressFill}
+                style={{ width: `${Math.min(100, Math.round(salaryInfo?.work_progress ?? 0))}%` }}
+              />
+            </div>
           </div>
-          <div className={styles.heroStat}>
-            <span>今日收益</span>
-            <strong>¥{salaryInfo ? salaryInfo.today_earnings.toFixed(1) : '0.0'}</strong>
+        </article>
+
+        <article className={styles.kpiCard}>
+          <span className={styles.kpiLabel}>今日按键</span>
+          <strong className={styles.kpiValue}>{todayStats.total.toLocaleString()}</strong>
+        </article>
+
+        <article className={styles.kpiCard}>
+          <span className={styles.kpiLabel}>代码占比</span>
+          <div className={styles.kpiWithProgress}>
+            <strong className={styles.kpiValue}>
+              {heartbeat ? `${Math.round(heartbeat.code_ratio)}%` : '—'}
+            </strong>
+            <div className={styles.miniProgress}>
+              <div
+                className={`${styles.miniProgressFill} ${styles.codeFill}`}
+                style={{ width: `${Math.min(100, Math.round(heartbeat?.code_ratio ?? 0))}%` }}
+              />
+            </div>
           </div>
-          <div className={styles.heroStat}>
-            <span>工作进度</span>
-            <strong>{Math.round(salaryInfo?.work_progress ?? 0)}%</strong>
-          </div>
-        </div>
+        </article>
+
+        <article className={styles.kpiCard}>
+          <span className={styles.kpiLabel}>专注状态</span>
+          <strong className={`${styles.kpiValue} ${styles.statusValue}`}>
+            <span className={`${styles.statusDotInline} ${styles[`status_${heartbeat?.status?.toLowerCase() ?? 'idle'}`]}`} />
+            {statusLabel}
+          </strong>
+        </article>
       </section>
 
+      {/* Load error */}
       {loadError && (
-        <section className={styles.errorCard}>
-          <strong>{loadError.code}</strong>
-          <p>{loadError.message}</p>
-        </section>
+        <div className={styles.errorBanner}>
+          <strong>{loadError.code}</strong>: {loadError.message}
+        </div>
       )}
 
-      <section className={styles.metricGrid}>
-        <article className={styles.metricCard}>
-          <span>今日按键</span>
-          <strong>{todayStats.total.toLocaleString()}</strong>
-          <small>全部记录输入量</small>
-        </article>
-        <article className={styles.metricCard}>
-          <span>字符输入</span>
-          <strong>{todayStats.charCount.toLocaleString()}</strong>
-          <small>自然语言与通用输入</small>
-        </article>
-        <article className={styles.metricCard}>
-          <span>代码输入</span>
-          <strong>{todayStats.codeCount.toLocaleString()}</strong>
-          <small>IDE / Terminal 场景</small>
-        </article>
-        <article className={styles.metricCard}>
-          <span>浏览器输入</span>
-          <strong>{(todayStats.browserCount ?? 0).toLocaleString()}</strong>
-          <small>网页内键盘操作</small>
-        </article>
-      </section>
+      {/* ============================================
+          Tab bar
+          ============================================ */}
+      <nav className={styles.tabBar}>
+        {TAB_ITEMS.map((tab) => (
+          <button
+            key={tab.key}
+            className={`${styles.tab} ${activeTab === tab.key ? styles.tabActive : ''}`}
+            onClick={() => setActiveTab(tab.key)}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </nav>
 
-      <section className={styles.tabs}>
-        <button
-          className={`${styles.tab} ${activeTab === 'today' ? styles.active : ''}`}
-          onClick={() => setActiveTab('today')}
-        >
-          今日走势
-        </button>
-        <button
-          className={`${styles.tab} ${activeTab === 'history' ? styles.active : ''}`}
-          onClick={() => setActiveTab('history')}
-        >
-          近 30 天
-        </button>
-        <button
-          className={`${styles.tab} ${activeTab === 'apps' ? styles.active : ''}`}
-          onClick={() => setActiveTab('apps')}
-        >
-          应用分布
-        </button>
-      </section>
-
+      {/* ============================================
+          Tab: 今日走势 — hourly chart + focus breakdown
+          ============================================ */}
       {activeTab === 'today' && (
-        <section className={styles.chartGrid}>
+        <section className={styles.chartRow}>
           <article className={styles.panel}>
             <div className={styles.panelHeader}>
-              <span className={styles.eyebrow}>Hourly Flow</span>
-              <h3>今日分时输入</h3>
+              <h3>分时输入</h3>
+              <span className={styles.panelHint}>今日每小时按键分布</span>
             </div>
-            <ResponsiveContainer width="100%" height={260}>
+            <ResponsiveContainer width="100%" height={240}>
               <BarChart data={hourlyData}>
-                <CartesianGrid vertical={false} stroke="rgba(115, 131, 164, 0.18)" />
-                <XAxis dataKey="hour" axisLine={false} tickLine={false} tick={{ fill: '#66748e', fontSize: 11 }} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#66748e', fontSize: 11 }} />
+                <CartesianGrid vertical={false} stroke="rgba(115, 131, 164, 0.12)" />
+                <XAxis
+                  dataKey="hour"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: '#66748e', fontSize: 11 }}
+                />
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: '#66748e', fontSize: 11 }}
+                />
                 <Tooltip
-                  cursor={{ fill: 'rgba(115, 144, 255, 0.08)' }}
+                  cursor={{ fill: 'rgba(115, 144, 255, 0.06)' }}
                   contentStyle={{
-                    borderRadius: 16,
-                    border: '1px solid rgba(232, 238, 250, 0.94)',
+                    borderRadius: 14,
+                    border: '1px solid rgba(232, 238, 250, 0.9)',
                     background: 'rgba(255, 255, 255, 0.96)',
-                    boxShadow: '0 16px 28px rgba(111, 128, 166, 0.16)',
+                    boxShadow: '0 12px 24px rgba(111, 128, 166, 0.14)',
+                    fontSize: 12,
                   }}
                   formatter={(value: number) => [value.toLocaleString(), '按键']}
                   labelFormatter={(label) => `${label}:00`}
                 />
-                <Bar dataKey="count" radius={[10, 10, 4, 4]} fill="#7390ff" />
+                <Bar dataKey="count" radius={[8, 8, 3, 3]} fill="#7390ff" maxBarSize={32} />
               </BarChart>
             </ResponsiveContainer>
           </article>
 
           <article className={styles.panel}>
             <div className={styles.panelHeader}>
-              <span className={styles.eyebrow}>Focus Mix</span>
               <h3>专注构成</h3>
+              <span className={styles.panelHint}>代码 / 沟通 / 其他</span>
             </div>
-            <ResponsiveContainer width="100%" height={260}>
-              <AreaChart
-                data={[
-                  { name: 'Code', value: heartbeat?.code_ratio ?? 0 },
-                  { name: 'Talk', value: heartbeat?.talk_ratio ?? 0 },
-                  {
-                    name: 'Other',
-                    value: Math.max(0, 100 - (heartbeat?.code_ratio ?? 0) - (heartbeat?.talk_ratio ?? 0)),
-                  },
-                ]}
-              >
-                <defs>
-                  <linearGradient id="focusArea" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#7390ff" stopOpacity={0.55} />
-                    <stop offset="95%" stopColor="#7390ff" stopOpacity={0.04} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid vertical={false} stroke="rgba(115, 131, 164, 0.18)" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#66748e', fontSize: 11 }} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#66748e', fontSize: 11 }} />
+            <div className={styles.focusBars}>
+              {focusBars.map((bar) => (
+                <div key={bar.label} className={styles.focusRow}>
+                  <div className={styles.focusMeta}>
+                    <span
+                      className={styles.focusSwatch}
+                      style={{ background: FOCUS_COLORS[bar.label] ?? '#bcc6de' }}
+                    />
+                    <span className={styles.focusLabel}>{bar.label}</span>
+                    <span className={styles.focusRatio}>{Math.round(bar.ratio)}%</span>
+                  </div>
+                  <div className={styles.focusTrack}>
+                    <div
+                      className={styles.focusFill}
+                      style={{
+                        width: `${(bar.value / maxFocusValue) * 100}%`,
+                        background: FOCUS_COLORS[bar.label] ?? '#bcc6de',
+                      }}
+                    />
+                  </div>
+                  <span className={styles.focusCount}>{bar.value.toLocaleString()}</span>
+                </div>
+              ))}
+              {focusBars.length === 0 && (
+                <p className={styles.focusEmpty}>等待数据...</p>
+              )}
+            </div>
+          </article>
+        </section>
+      )}
+
+      {/* ============================================
+          Tab: 近 30 天 — monthly trend line chart
+          ============================================ */}
+      {activeTab === 'history' && (
+        <section className={styles.chartRow}>
+          <article className={`${styles.panel} ${styles.panelFull}`}>
+            <div className={styles.panelHeader}>
+              <h3>月度趋势</h3>
+              <span className={styles.panelHint}>最近 30 天每日输入总量</span>
+            </div>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={historyData}>
+                <CartesianGrid vertical={false} stroke="rgba(115, 131, 164, 0.12)" />
+                <XAxis
+                  dataKey="date"
+                  tickFormatter={(value) => value.slice(5)}
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: '#66748e', fontSize: 11 }}
+                />
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: '#66748e', fontSize: 11 }}
+                />
                 <Tooltip
                   contentStyle={{
-                    borderRadius: 16,
-                    border: '1px solid rgba(232, 238, 250, 0.94)',
+                    borderRadius: 14,
+                    border: '1px solid rgba(232, 238, 250, 0.9)',
                     background: 'rgba(255, 255, 255, 0.96)',
+                    boxShadow: '0 12px 24px rgba(111, 128, 166, 0.14)',
+                    fontSize: 12,
                   }}
-                  formatter={(value: number) => [`${Math.round(value)}%`, '占比']}
+                  formatter={(value: number) => [value.toLocaleString(), '按键']}
                 />
-                <Area type="monotone" dataKey="value" stroke="#7390ff" strokeWidth={2.5} fill="url(#focusArea)" />
-              </AreaChart>
+                <Line
+                  type="monotone"
+                  dataKey="total"
+                  stroke="#7390ff"
+                  strokeWidth={2.5}
+                  dot={{ r: 3, fill: '#7390ff', strokeWidth: 0 }}
+                  activeDot={{ r: 5, fill: '#7390ff', strokeWidth: 2, stroke: '#fff' }}
+                />
+              </LineChart>
             </ResponsiveContainer>
           </article>
         </section>
       )}
 
-      {activeTab === 'history' && (
-        <article className={styles.panel}>
-          <div className={styles.panelHeader}>
-            <span className={styles.eyebrow}>Monthly Trend</span>
-            <h3>最近 30 天输入趋势</h3>
-          </div>
-          <ResponsiveContainer width="100%" height={320}>
-            <LineChart data={historyData}>
-              <CartesianGrid vertical={false} stroke="rgba(115, 131, 164, 0.18)" />
-              <XAxis
-                dataKey="date"
-                tickFormatter={(value) => value.slice(5)}
-                axisLine={false}
-                tickLine={false}
-                tick={{ fill: '#66748e', fontSize: 11 }}
-              />
-              <YAxis axisLine={false} tickLine={false} tick={{ fill: '#66748e', fontSize: 11 }} />
-              <Tooltip
-                contentStyle={{
-                  borderRadius: 16,
-                  border: '1px solid rgba(232, 238, 250, 0.94)',
-                  background: 'rgba(255, 255, 255, 0.96)',
-                }}
-                formatter={(value: number) => [value.toLocaleString(), '按键']}
-              />
-              <Line
-                type="monotone"
-                dataKey="total"
-                stroke="#7390ff"
-                strokeWidth={3}
-                dot={{ r: 3.5, fill: '#7390ff', strokeWidth: 0 }}
-                activeDot={{ r: 5 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </article>
-      )}
-
+      {/* ============================================
+          Tab: 应用分布 — donut + ranked list
+          ============================================ */}
       {activeTab === 'apps' && (
-        <section className={styles.chartGrid}>
+        <section className={styles.chartRow}>
           <article className={styles.panel}>
             <div className={styles.panelHeader}>
-              <span className={styles.eyebrow}>App Mix</span>
-              <h3>今日应用占比</h3>
+              <h3>应用占比</h3>
+              <span className={styles.panelHint}>今日各应用按键分布</span>
             </div>
             <div className={styles.pieWrap}>
-              <PieChart width={280} height={280}>
+              <PieChart width={240} height={240}>
                 <Pie
                   data={appBreakdown}
                   dataKey="value"
-                  cx={140}
-                  cy={140}
-                  innerRadius={74}
-                  outerRadius={104}
-                  paddingAngle={4}
+                  cx={120}
+                  cy={120}
+                  innerRadius={64}
+                  outerRadius={94}
+                  paddingAngle={3}
                 >
                   {appBreakdown.map((item, index) => (
-                    <Cell key={item.name} fill={pieColors[index % pieColors.length]} />
+                    <Cell key={item.name} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                   ))}
                 </Pie>
               </PieChart>
@@ -327,19 +376,25 @@ export function Dashboard() {
 
           <article className={styles.panel}>
             <div className={styles.panelHeader}>
-              <span className={styles.eyebrow}>Top Apps</span>
-              <h3>高频应用清单</h3>
+              <h3>高频应用</h3>
+              <span className={styles.panelHint}>按输入量排序</span>
             </div>
             <div className={styles.appList}>
               {appBreakdown.map((item, index) => (
                 <div key={item.name} className={styles.appRow}>
                   <div className={styles.appInfo}>
-                    <span className={styles.appSwatch} style={{ background: pieColors[index % pieColors.length] }} />
+                    <span
+                      className={styles.appSwatch}
+                      style={{ background: PIE_COLORS[index % PIE_COLORS.length] }}
+                    />
                     <span className={styles.appName}>{item.name}</span>
                   </div>
-                  <strong>{item.value.toLocaleString()}</strong>
+                  <strong className={styles.appCount}>{item.value.toLocaleString()}</strong>
                 </div>
               ))}
+              {appBreakdown.length === 0 && (
+                <p className={styles.appEmpty}>暂无应用数据</p>
+              )}
             </div>
           </article>
         </section>

@@ -1,5 +1,5 @@
 {
-  "name": "keyboard-tracker",
+  "name": "brick-monitor",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -15,10 +15,11 @@
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
     "release:macos": "pnpm build && tauri build --bundles app,dmg",
+    "release:github": "pnpm build && tauri build --bundles dmg",
     "release:macos:verify-signing": "zsh ./scripts/verify-macos-signing-env.sh"
   },
   "dependencies": {
-    "@tauri-apps/api": "^2.0.0",
+    "@tauri-apps/api": "~2.10.0",
     "@tauri-apps/plugin-shell": "^2.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -28,7 +29,7 @@
     "dayjs": "^1.11.10"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^2.0.0",
+    "@tauri-apps/cli": "~2.10.0",
     "@types/node": "^20.11.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",

@@ -1,182 +1,282 @@
+/* ============================================
+   App Shell — glassmorphism container
+   ============================================ */
+
 .appShell {
   width: 100%;
   min-height: 100vh;
-  padding: 18px;
+  padding: 12px;
   background:
-    radial-gradient(circle at top left, rgba(170, 190, 255, 0.28), transparent 28%),
-    radial-gradient(circle at top right, rgba(161, 224, 214, 0.18), transparent 22%),
-    linear-gradient(180deg, #edf2f8 0%, #e7edf5 100%);
+    radial-gradient(ellipse at 12% 12%, rgba(141, 177, 255, 0.26), transparent 32%),
+    radial-gradient(ellipse at 76% 8%, rgba(129, 226, 198, 0.16), transparent 26%),
+    radial-gradient(ellipse at 82% 88%, rgba(255, 200, 138, 0.14), transparent 24%),
+    linear-gradient(170deg, #f2f6fc 0%, #ecf2f9 40%, #e8eef7 100%);
 }
 
 .appFrame {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  min-height: calc(100vh - 36px);
-  padding: 20px;
-  border-radius: 28px;
-  background: rgba(249, 251, 255, 0.72);
-  border: 1px solid rgba(255, 255, 255, 0.86);
+  gap: 12px;
+  min-height: calc(100vh - 24px);
+  padding: 16px 20px 20px;
+  border-radius: 24px;
+  background: rgba(249, 251, 255, 0.68);
+  border: 1px solid rgba(255, 255, 255, 0.82);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.92),
-    0 20px 60px rgba(101, 122, 167, 0.16);
-  backdrop-filter: blur(22px) saturate(125%);
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 16px 48px rgba(101, 124, 172, 0.14);
+  backdrop-filter: blur(20px) saturate(125%);
+  overflow: hidden;
 }
+
+/* ============================================
+   Top bar — compact single row
+   ============================================ */
 
 .topbar {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: 18px;
+  gap: 16px;
+  min-height: 44px;
 }
 
 .brand {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  align-items: center;
+  gap: 10px;
 }
 
-.eyebrow,
-.statusTitle {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--text-faint);
+.brandMark {
+  flex-shrink: 0;
 }
 
 .brand h1 {
-  font-size: 30px;
-  line-height: 1.05;
+  font-size: 18px;
+  font-weight: 700;
   color: var(--text-strong);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
 }
 
-.brand p {
-  max-width: 720px;
-  color: var(--text-muted);
-  line-height: 1.58;
-}
-
-.statusBadge {
-  display: inline-flex;
+.topbarRight {
+  display: flex;
   align-items: center;
-  gap: 10px;
-  min-height: 40px;
-  padding: 0 16px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.94);
-  color: var(--text-main);
-  box-shadow: 0 8px 18px rgba(118, 136, 173, 0.12);
-}
-
-.statusBadge.warning {
-  color: var(--warning);
-  background: rgba(255, 248, 238, 0.94);
-}
-
-.statusBadge.danger {
-  color: var(--danger);
-  background: rgba(255, 242, 244, 0.94);
-}
-
-.statusDot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--success);
-  box-shadow: 0 0 0 6px rgba(74, 165, 124, 0.12);
-}
-
-.statusBadge.warning .statusDot {
-  background: var(--warning);
-  box-shadow: 0 0 0 6px rgba(183, 131, 71, 0.12);
-}
-
-.statusBadge.danger .statusDot {
-  background: var(--danger);
-  box-shadow: 0 0 0 6px rgba(212, 107, 116, 0.12);
-}
-
-.summaryGrid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
 }
 
-.summaryCard,
-.statusPanel {
-  padding: 16px 18px;
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.82);
-  border: 1px solid rgba(255, 255, 255, 0.94);
-  box-shadow: 0 10px 24px rgba(121, 139, 175, 0.1);
+/* Status pill */
+.statusPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 6px 16px rgba(106, 122, 161, 0.1);
+  transition: background 180ms ease, border-color 180ms ease;
 }
 
-.summaryCard span {
+.statusPill.warning {
+  background: rgba(255, 249, 240, 0.88);
+  border-color: rgba(255, 228, 181, 0.7);
+}
+
+.statusPill.danger {
+  background: rgba(255, 242, 244, 0.88);
+  border-color: rgba(255, 207, 212, 0.7);
+}
+
+.statusDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--success);
+  box-shadow: 0 0 0 4px rgba(74, 165, 124, 0.14);
+  flex-shrink: 0;
+}
+
+.statusPill.warning .statusDot {
+  background: var(--warning);
+  box-shadow: 0 0 0 4px rgba(183, 131, 71, 0.14);
+}
+
+.statusPill.danger .statusDot {
+  background: var(--danger);
+  box-shadow: 0 0 0 4px rgba(212, 107, 116, 0.14);
+}
+
+.statusText {
   font-size: 12px;
-  color: var(--text-faint);
+  font-weight: 600;
+  color: var(--text-main);
+  white-space: nowrap;
 }
 
-.summaryCard strong {
-  display: block;
-  margin-top: 10px;
-  font-size: 20px;
+/* Settings trigger */
+.settingsTrigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.68);
+  border: 1px solid rgba(255, 255, 255, 0.84);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 160ms ease;
+  white-space: nowrap;
+}
+
+.settingsTrigger:hover {
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--text-strong);
+  border-color: rgba(200, 210, 235, 0.8);
+  box-shadow: 0 4px 14px rgba(106, 122, 161, 0.1);
+}
+
+/* ============================================
+   Alert banner
+   ============================================ */
+
+.alertBanner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: 16px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--text-main);
+}
+
+.alertBanner.warning {
+  background: rgba(255, 249, 239, 0.82);
+  border: 1px solid rgba(255, 227, 175, 0.7);
+  color: #8a6328;
+}
+
+.alertBanner.danger {
+  background: rgba(255, 241, 243, 0.82);
+  border: 1px solid rgba(255, 205, 210, 0.7);
+  color: #a84852;
+}
+
+.alertIcon {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.alertText {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ============================================
+   Workspace — full-width main content
+   ============================================ */
+
+.workspace {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ============================================
+   Settings drawer
+   ============================================ */
+
+.drawerOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 22, 42, 0.2);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+}
+
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 440px;
+  max-width: calc(100vw - 60px);
+  display: flex;
+  flex-direction: column;
+  background:
+    linear-gradient(180deg, rgba(250, 252, 255, 0.98), rgba(244, 248, 254, 0.96));
+  border-left: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: -8px 0 40px rgba(86, 103, 148, 0.16);
+  backdrop-filter: blur(24px) saturate(130%);
+  z-index: 101;
+  overflow: hidden;
+}
+
+.drawerHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px 14px;
+  border-bottom: 1px solid rgba(184, 200, 230, 0.18);
+  flex-shrink: 0;
+}
+
+.drawerHeader h2 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-strong);
+  letter-spacing: -0.01em;
+}
+
+.drawerClose {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 140ms ease;
+}
+
+.drawerClose:hover {
+  background: rgba(192, 204, 228, 0.18);
   color: var(--text-strong);
 }
 
-.statusPanel {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+.drawerBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 22px 24px;
 }
 
-.statusPanel p {
-  color: var(--text-main);
-  line-height: 1.6;
-}
-
-.statusPanel.warning {
-  background: rgba(255, 248, 238, 0.92);
-}
-
-.statusPanel.danger {
-  background: rgba(255, 242, 244, 0.92);
-}
-
-.workspace {
-  display: grid;
-  grid-template-columns: minmax(0, 1.65fr) minmax(340px, 0.95fr);
-  gap: 16px;
-  align-items: start;
-}
-
-.workspaceMain,
-.workspaceSide {
-  min-height: 0;
-}
-
-.workspaceSide {
-  position: sticky;
-  top: 0;
-}
-
-@media (max-width: 1180px) {
-  .workspace {
-    grid-template-columns: 1fr;
-  }
-
-  .workspaceSide {
-    position: static;
-  }
-}
-
+/* Responsive */
 @media (max-width: 860px) {
-  .topbar {
-    flex-direction: column;
+  .brand h1 {
+    font-size: 16px;
   }
 
-  .summaryGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .topbarRight {
+    gap: 8px;
+  }
+
+  .statusPill,
+  .settingsTrigger {
+    height: 30px;
+    padding: 0 10px;
+    font-size: 11px;
+  }
+
+  .drawer {
+    width: 100%;
+    max-width: 100vw;
   }
 }

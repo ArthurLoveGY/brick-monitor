@@ -15,7 +15,7 @@ impl Database {
             .ok_or_else(|| {
                 rusqlite::Error::InvalidPath("无法解析系统数据目录".into())
             })?
-            .join("keyboard-tracker")
+            .join("brick-monitor")
             .join("data.db");
 
         let parent_dir = db_path.parent().ok_or_else(|| {
@@ -25,6 +25,7 @@ impl Database {
             .map_err(|_| rusqlite::Error::InvalidPath(parent_dir.to_path_buf()))?;
         let conn = Connection::open(db_path)?;
         conn.execute_batch(crate::database::schema::SCHEMA)?;
+        conn.execute_batch("PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL;")?;
 
         // 迁移: 为现有数据库添加 lunch_break_minutes 列
         let has_lunch_break: bool = conn.query_row(
